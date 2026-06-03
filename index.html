@@ -235,6 +235,12 @@
       drop-shadow(0 3px 4px rgba(0, 0, 0, 0.6));
     animation: unitBreath 1.2s ease infinite alternate;
   }
+  /* 모바일에서는 filter 단순화 (성능) */
+  @media (max-width: 600px) {
+    .unit-svg {
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+    }
+  }
   @keyframes unitBreath {
     from { transform: translateY(0); }
     to   { transform: translateY(-1.5px); }
@@ -271,6 +277,13 @@
       drop-shadow(0 0 12px rgba(255, 60, 60, 0.4))
       drop-shadow(0 3px 5px rgba(0, 0, 0, 0.7));
     animation: enemyWalk 0.5s ease infinite alternate;
+  }
+  /* 모바일에서 적 SVG 필터 단순화 */
+  @media (max-width: 600px) {
+    .enemy-svg {
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+    }
+    .enemy::before { display: none; }
   }
   @keyframes enemyWalk {
     from { transform: translateY(0) rotate(-1.5deg); }
@@ -650,16 +663,16 @@
   /* === 폭탄 버튼 (모바일) === */
   .bomb-btn {
     position: absolute;
-    bottom: 110px;
-    right: 16px;
-    width: 78px;
-    height: 78px;
+    top: 150px;
+    right: 14px;
+    width: 72px;
+    height: 72px;
     border-radius: 50%;
     background: radial-gradient(circle, rgba(255, 60, 60, 0.4), rgba(60, 0, 0, 0.85));
     border: 3px solid #ff3d3d;
     color: #ff3d3d;
     font-family: 'Bungee', sans-serif;
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     cursor: pointer;
     z-index: 60;
     box-shadow: 0 0 25px rgba(255, 60, 60, 0.7), inset 0 0 15px rgba(255, 60, 60, 0.4), 0 4px 12px rgba(0, 0, 0, 0.6);
@@ -699,14 +712,14 @@
     text-shadow: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
   }
-  /* 모바일 화면에서 폭탄 버튼 더 크게 */
+  /* 모바일 화면에서 폭탄 버튼 위치 조정 */
   @media (max-width: 600px) {
     .bomb-btn {
-      width: 84px;
-      height: 84px;
-      bottom: 100px;
-      right: 14px;
-      font-size: 2.6rem;
+      width: 68px;
+      height: 68px;
+      top: 140px;
+      right: 12px;
+      font-size: 2rem;
     }
   }
 
@@ -810,6 +823,31 @@
   @keyframes confettiFall {
     from { transform-origin: center; transform: translateY(-20px) rotate(0); }
     to   { transform: translateY(100px) rotate(360deg); opacity: 0; }
+  }
+
+  /* === 부대 폭 막대바 (유닛 1명 + 부대 크기 표시) === */
+  #unit-width-bar {
+    position: absolute;
+    height: 6px;
+    background: linear-gradient(90deg,
+      rgba(0, 240, 255, 0.3) 0%,
+      rgba(0, 240, 255, 1) 50%,
+      rgba(0, 240, 255, 0.3) 100%);
+    border: 1px solid rgba(0, 240, 255, 0.8);
+    border-radius: 3px;
+    z-index: 11;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.6);
+    display: none;
+    transition: width 0.3s ease;
+  }
+  #unit-width-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 2px;
+    height: 2px;
   }
 
   /* === 상단 배경 시설 (터널 + 트럼프 + 국기 + 로켓) === */
@@ -4446,6 +4484,9 @@
     <div class="name" id="weapon-display">PISTOL</div>
   </div>
 
+  <!-- 부대 폭 표시 막대바 (유닛 1명 + 그 아래 막대바) -->
+  <div id="unit-width-bar"></div>
+
   <button id="sound-toggle" style="position:absolute; top:4rem; right:1rem; z-index:55;
     background:rgba(20,26,46,0.85); border:1px solid rgba(0,240,255,0.3);
     color:var(--neon-cyan); font-family:'JetBrains Mono',monospace; font-size:0.65rem;
@@ -4994,57 +5035,29 @@ function removeUnits(n) {
   if (state.units.length <= 0 && state.running) gameOver();
 }
 
-// 표시할 유닛 수 = 실제 유닛 / 5 (최소 1, 최대 24)
-// 나머지는 ghost (충돌은 되지만 DOM 렌더링 안 함 → 렉 방지)
+// 유닛 표시는 항상 1명만 (모바일 성능 최적화)
+// 부대 크기는 유닛 아래 가로 막대바로 표시
 function getVisualUnitCount(n) {
-  if (n <= 0) return 0;
-  return Math.max(1, Math.min(24, Math.ceil(n / 5)));
+  return n > 0 ? 1 : 0;
 }
 
 function updateFormation() {
   const n = state.units.length;
   if (n === 0) return;
-  if (n === 1) {
-    state.units[0].targetX = 0;
-    state.units[0].targetY = 0;
-    return;
-  }
 
-  const visualCount = getVisualUnitCount(n);
+  // Visual 유닛 (인덱스 0) - 항상 중앙
+  state.units[0].targetX = 0;
+  state.units[0].targetY = 0;
 
-  // === Visual 유닛 (처음 visualCount개) - 옆으로 넓게 펼치는 부대 대형 ===
-  // 가로 라인 위주의 시각적으로 큰 부대 느낌 (V자 또는 가로 3열)
-  for (let i = 0; i < visualCount && i < n; i++) {
-    let ox, oy;
-    if (visualCount === 1) {
-      ox = 0; oy = 0;
-    } else {
-      // 가로로 펼쳐진 배치 (3줄 V자형)
-      const perRow = Math.max(3, Math.ceil(visualCount / 3));
-      const row = Math.floor(i / perRow);
-      const col = i % perRow;
-      const rowCount = (row === Math.floor((visualCount - 1) / perRow))
-        ? (visualCount - row * perRow)
-        : perRow;
-      // 가로 간격: 좀 넓게 (부대처럼 보이게)
-      const spacing = 20;
-      ox = (col - (rowCount - 1) / 2) * spacing;
-      oy = row * 14 - 7;
-    }
-    state.units[i].targetX = ox;
-    state.units[i].targetY = oy;
-  }
-
-  // === Ghost 유닛 (visualCount 이후) - 좁은 원형 (충돌용, 안 보임) ===
-  // 장애물 피하기 어려움 유지를 위해 visual 유닛 주변에 분포
-  let placed = visualCount;
+  // Ghost 유닛들 - 옆으로 좁게 펼침 (충돌용, 안 보임)
+  // 부대 폭은 sqrt(n) 기반으로 자연스럽게 증가
+  let placed = 1;
   let ring = 0;
   while (placed < n) {
     const ringCount = ring === 0 ? 1 : ring * 6;
     const radius = ring * CONFIG.FORMATION_RADIUS_BASE;
     for (let i = 0; i < ringCount && placed < n; i++) {
       const angle = (i / ringCount) * Math.PI * 2 - Math.PI / 2;
-      // 가로로 분포 (visual 유닛 영역과 겹치되 좀 좁게)
       const ox = Math.cos(angle) * radius * 1.75;
       const oy = Math.sin(angle) * radius * 0.6;
       state.units[placed].targetX = ox;
@@ -5207,7 +5220,7 @@ function enemyShoot(enemy) {
   // 가장 가까운 유닛 향해 발사
   if (state.units.length === 0) return;
   // 화면에 적 탄환이 너무 많으면 새로 안 쏘게 (렉 방지)
-  const MAX_ENEMY_BULLETS = 100;
+  const MAX_ENEMY_BULLETS = 30;
   if (state.enemyBullets.length >= MAX_ENEMY_BULLETS) return;
   SOUNDS.enemyShoot();
   let target = state.units[0];
@@ -6149,27 +6162,25 @@ function updateBarriers(dt) {
 }
 
 // ========== 탄환 (직선 위로) ==========
-// 화면 미사일 최대 20개로 고정 - 유닛이 많아질수록 데미지가 강해짐
-const MAX_BULLETS_PER_VOLLEY = 20;
+// 화면 미사일 최대 6개로 고정 - 모바일 성능 위해 대폭 축소
+// 유닛이 많아질수록 데미지가 강해짐 (DPS 보존)
+const MAX_BULLETS_PER_VOLLEY = 6;
 
 function getShootersPerVolley() {
   const n = state.units.length;
   if (n <= 1) return n;
   const w = WEAPONS[state.weaponIdx];
-  // 1탄막 무기는 최대 20명, 2탄막은 10명, 3탄막은 6명 발사
+  // 1탄막 → 6명, 2탄막 → 3명, 3탄막 → 2명 발사
   const maxShooters = Math.floor(MAX_BULLETS_PER_VOLLEY / w.count);
   return Math.min(n, Math.max(1, maxShooters));
 }
 
-// 유닛수 / 실제 발사 유닛 비율만큼 데미지 배율 (70% 보정)
-// 100명 100% 비율로 보존하면 너무 강해서, 0.7 곱해 균형 조정
+// 유닛수 × 0.7만큼 데미지 배율 (실제 발사 1명이지만 화력은 부대 전체)
 function getUnitPowerMultiplier() {
   const n = state.units.length;
   if (n <= 1) return 1;
-  const visualCount = getVisualUnitCount(n);
-  const shooters = Math.min(visualCount, getShootersPerVolley());
-  if (shooters <= 0) return 1;
-  return (n / shooters) * 0.7;
+  // 단순 공식: n × 0.7 (visual 1명에 모든 화력 집중)
+  return Math.max(1, n * 0.7);
 }
 
 function spawnBullets() {
@@ -6375,7 +6386,6 @@ function updateUnits(dt) {
   const py = getPlayerY();
   const lerp = 0.4;
   const n = state.units.length;
-  const visualCount = getVisualUnitCount(n);
 
   for (let i = 0; i < n; i++) {
     const unit = state.units[i];
@@ -6384,8 +6394,8 @@ function updateUnits(dt) {
     unit.x += dx * lerp;
     unit.y += dy * lerp;
 
-    if (i < visualCount) {
-      // Visual 유닛 - 화면에 표시
+    if (i === 0) {
+      // Visual 유닛 (1명만) - 화면에 표시
       if (unit._hidden) {
         unit.el.style.display = '';
         unit._hidden = false;
@@ -6399,6 +6409,20 @@ function updateUnits(dt) {
         unit._hidden = true;
       }
     }
+  }
+
+  // 부대 폭 막대바 - visual 유닛 아래 표시 (유닛 수에 비례한 폭)
+  const bar = document.getElementById('unit-width-bar');
+  if (bar && n > 0) {
+    const v = state.units[0];
+    // 부대 폭: 1명=20px, 100명=140px (sqrt 기반)
+    const barWidth = Math.max(20, Math.min(160, Math.sqrt(n) * 14));
+    bar.style.display = 'block';
+    bar.style.width = barWidth + 'px';
+    bar.style.left = (v.x - barWidth / 2) + 'px';
+    bar.style.top = (v.y + 26) + 'px';
+  } else if (bar) {
+    bar.style.display = 'none';
   }
 }
 
@@ -6887,11 +6911,12 @@ function handleWaveTransition() {
 function victory() {
   if (!state.running) return;
   state.running = false;
-  // 폭탄 버튼/HUD 숨김
+  // 폭탄 버튼/HUD/막대바 숨김
   document.getElementById('bomb-btn').style.display = 'none';
   document.getElementById('bomb-hud').style.display = 'none';
   document.getElementById('powerup-hud').style.display = 'none';
   document.getElementById('debuff-hud').style.display = 'none';
+  document.getElementById('unit-width-bar').style.display = 'none';
   // 트럼프 구출 엔딩 시퀀스 먼저 재생 후 모달
   playEndingSequence(() => {
     document.getElementById('end-title').textContent = '🇺🇸 TRUMP RESCUED! 🇺🇸';
@@ -7372,11 +7397,12 @@ function gameOver() {
   if (!state.running) return;
   state.running = false;
   SOUNDS.gameOver();
-  // 폭탄 버튼/HUD 숨김
+  // 폭탄 버튼/HUD/막대바 숨김
   document.getElementById('bomb-btn').style.display = 'none';
   document.getElementById('bomb-hud').style.display = 'none';
   document.getElementById('powerup-hud').style.display = 'none';
   document.getElementById('debuff-hud').style.display = 'none';
+  document.getElementById('unit-width-bar').style.display = 'none';
   document.getElementById('end-title').textContent = 'GAME OVER';
   document.getElementById('end-title').className = 'modal-title gameover';
   document.getElementById('end-subtitle').textContent = '— All Units Lost —';
