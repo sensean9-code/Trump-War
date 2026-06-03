@@ -299,6 +299,18 @@
       drop-shadow(0 0 48px rgba(177, 74, 255, 0.4))
       drop-shadow(0 6px 12px rgba(0, 0, 0, 0.8));
   }
+  /* 모바일에서 보스/비행 filter 단순화 (성능) */
+  @media (max-width: 600px) {
+    .enemy.boss-type .enemy-svg {
+      filter: drop-shadow(0 0 4px rgba(177, 74, 255, 0.6)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8));
+      animation: none; /* 모바일에서는 보스 흔들림 애니메이션 제거 */
+    }
+    .enemy.flying-type .enemy-svg {
+      filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.7));
+    }
+    /* 모바일 보스 호광 (boss-aura) 제거 */
+    .enemy.boss-type::after { display: none; }
+  }
   @keyframes bossFloat {
     from { transform: translateY(0) rotate(-0.5deg); }
     to   { transform: translateY(-5px) rotate(0.5deg); }
@@ -851,6 +863,34 @@
   }
 
   /* === 상단 배경 시설 (터널 + 트럼프 + 국기 + 로켓) === */
+  @keyframes flagWave {
+    0%   { transform: skewY(-1deg) scale(1, 1); }
+    100% { transform: skewY(1deg) scale(1, 0.96); }
+  }
+  @keyframes rocketFloat {
+    from { transform: translateY(0); }
+    to   { transform: translateY(-6px); }
+  }
+  @keyframes trumpStruggle {
+    from { transform: rotate(-1.5deg); }
+    to   { transform: rotate(1.5deg); }
+  }
+  .trump-help-bubble {
+    animation: helpBubble 1s ease-in-out infinite alternate;
+    transform-origin: center;
+  }
+  @keyframes helpBubble {
+    0%   { opacity: 1; transform: scale(1); }
+    100% { opacity: 0.7; transform: scale(1.08); }
+  }
+  .warning-light {
+    animation: warningBlink 0.6s steps(2) infinite;
+  }
+  @keyframes warningBlink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0.3; }
+  }
+
   .top-scenery {
     position: absolute;
     top: 0;
@@ -865,89 +905,59 @@
   .scenery-flag {
     position: absolute;
     top: 14px;
-    left: 10px;
-    width: 70px;
-    height: 45px;
+    left: 8px;
+    width: 58px;
+    height: 38px;
     animation: flagWave 3s ease-in-out infinite alternate;
     transform-origin: left center;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    z-index: 3;
   }
-  @keyframes flagWave {
-    0%   { transform: skewY(-1deg) scale(1, 1); }
-    100% { transform: skewY(1deg) scale(1, 0.96); }
-  }
-  /* 스페이스X 로켓 (오른쪽 위, 살짝 둥둥 뜸) */
+  /* 스페이스X 로켓 (오른쪽 위) */
   .scenery-rocket {
     position: absolute;
     top: 6px;
-    right: 12px;
-    width: 38px;
-    height: 110px;
+    right: 10px;
+    width: 30px;
+    height: 88px;
     animation: rocketFloat 2.5s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 8px rgba(255, 142, 60, 0.5)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 0 6px rgba(255, 142, 60, 0.5));
+    z-index: 3;
   }
-  @keyframes rocketFloat {
-    from { transform: translateY(0); }
-    to   { transform: translateY(-6px); }
-  }
-  /* 터널 + 트럼프 묶음 컨테이너 (가운데) */
+  /* 터널 + 트럼프 묶음 컨테이너 - 화면 양옆 가득 */
   .scenery-tunnel-wrap {
     position: absolute;
     top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 280px;
-    height: 170px;
-    max-width: 75vw;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
   }
   /* 묶인 트럼프 (터널 위) */
   .scenery-trump {
-    width: 70px;
-    height: 55px;
+    width: 80px;
+    height: 60px;
     margin-bottom: -4px;
     z-index: 2;
     animation: trumpStruggle 1.5s ease-in-out infinite alternate;
-    filter: drop-shadow(0 0 5px rgba(255, 214, 10, 0.4)) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+    filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
   }
-  @keyframes trumpStruggle {
-    from { transform: rotate(-1.5deg); }
-    to   { transform: rotate(1.5deg); }
-  }
-  /* 트럼프 HELP 말풍선 깜빡임 */
-  .trump-help-bubble {
-    animation: helpBubble 1s ease-in-out infinite alternate;
-    transform-origin: center;
-  }
-  @keyframes helpBubble {
-    0%   { opacity: 1; transform: scale(1); }
-    100% { opacity: 0.7; transform: scale(1.08); }
-  }
-  /* 적 생성 터널 */
+  /* 적 생성 터널 - 화면 양옆까지 */
   .scenery-tunnel {
-    width: 240px;
-    max-width: 70vw;
-    height: 100px;
-    filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.8));
+    width: 100%;
+    max-width: 100vw;
+    height: 110px;
   }
-  /* 터널 경고등 깜빡임 */
-  .warning-light {
-    animation: warningBlink 0.6s steps(2) infinite;
-  }
-  @keyframes warningBlink {
-    0%, 49% { opacity: 1; }
-    50%, 100% { opacity: 0.3; }
-  }
-  /* 화면이 매우 작을 때 모바일 대응 */
   @media (max-width: 480px) {
-    .top-scenery { height: 140px; }
-    .scenery-flag { width: 50px; height: 32px; top: 8px; left: 6px; }
-    .scenery-rocket { width: 28px; height: 80px; top: 4px; right: 8px; }
-    .scenery-tunnel-wrap { width: 220px; height: 130px; }
-    .scenery-trump { width: 55px; height: 42px; }
-    .scenery-tunnel { width: 200px; height: 80px; }
+    .top-scenery { height: 150px; }
+    .scenery-flag { width: 48px; height: 30px; top: 8px; left: 6px; }
+    .scenery-rocket { width: 26px; height: 72px; top: 4px; right: 8px; }
+    .scenery-tunnel-wrap { height: 150px; }
+    .scenery-trump { width: 64px; height: 48px; }
+    .scenery-tunnel { height: 95px; }
   }
 
   .powerup-hud {
@@ -4512,7 +4522,7 @@
   <div class="debuff-hud" id="debuff-hud" style="display:none;"></div>
 
   <!-- 폭탄 사용 버튼 (모바일) -->
-  <button class="bomb-btn empty" id="bomb-btn" onclick="useBomb()" style="display:none;">
+  <button class="bomb-btn empty" id="bomb-btn" ontouchstart="event.preventDefault(); event.stopPropagation(); useBomb();" onclick="event.stopPropagation(); useBomb();" style="display:none;">
     💣
     <span class="bomb-btn-count" id="bomb-btn-count" style="display:none;">0</span>
   </button>
@@ -4656,36 +4666,36 @@ const WEAPONS = [
   { id: 'glock',      name: 'GLOCK 17',         damage: 31,  fireRate: 240, bulletSpeed: 10, bulletColor: '#3df0ff', bulletW: 3, bulletH: 10, count: 1, svg: 'unit-pistol', svgSize: 36, color: '#3df0ff' },   // 129
   { id: 'desert',     name: 'DESERT EAGLE',     damage: 74,  fireRate: 320, bulletSpeed: 11, bulletColor: '#7ff5ff', bulletW: 4, bulletH: 11, count: 1, svg: 'unit-pistol', svgSize: 36, color: '#7ff5ff' },   // 231
   { id: 'dual',       name: 'DUAL PISTOLS',     damage: 30,  fireRate: 180, bulletSpeed: 11, bulletColor: '#7ff5ff', bulletW: 3, bulletH: 10, count: 2, svg: 'unit-pistol', svgSize: 36, color: '#a3eaff' },   // 333
-  { id: 'mp5',        name: 'MP5 SMG',          damage: 39,  fireRate: 90,  bulletSpeed: 12, bulletColor: '#a3eaff', bulletW: 3, bulletH: 10, count: 1, svg: 'unit-pistol', svgSize: 36, color: '#c5f3ff' },   // 433
+  { id: 'mp5',        name: 'MP5 SMG',          damage: 39,  fireRate: 200,  bulletSpeed: 12, bulletColor: '#a3eaff', bulletW: 3, bulletH: 10, count: 1, svg: 'unit-pistol', svgSize: 36, color: '#c5f3ff' },   // 433
   // 6-10: 라이플 계열 (533~933 DPS)
-  { id: 'uzi',        name: 'UZI',              damage: 54,  fireRate: 100, bulletSpeed: 12, bulletColor: '#39ff88', bulletW: 3, bulletH: 10, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#39ff88' },   // 540
-  { id: 'ak47',       name: 'AK-47',            damage: 82,  fireRate: 130, bulletSpeed: 12, bulletColor: '#39ff88', bulletW: 4, bulletH: 12, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#5cff9c' },   // 631
-  { id: 'm4',         name: 'M4 CARBINE',       damage: 73,  fireRate: 100, bulletSpeed: 13, bulletColor: '#7eff9c', bulletW: 4, bulletH: 12, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#7eff9c' },   // 730
-  { id: 'scar',       name: 'SCAR-H',           damage: 91,  fireRate: 110, bulletSpeed: 13, bulletColor: '#a3ffc6', bulletW: 4, bulletH: 13, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#a3ffc6' },   // 827
-  { id: 'g36',        name: 'G36 ASSAULT',      damage: 40,  fireRate: 85,  bulletSpeed: 13, bulletColor: '#c3ffcd', bulletW: 4, bulletH: 13, count: 2, svg: 'unit-rifle', svgSize: 36, color: '#c3ffcd' },   // 941
+  { id: 'uzi',        name: 'UZI',              damage: 54,  fireRate: 200, bulletSpeed: 12, bulletColor: '#39ff88', bulletW: 3, bulletH: 10, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#39ff88' },   // 540
+  { id: 'ak47',       name: 'AK-47',            damage: 123,  fireRate: 220, bulletSpeed: 12, bulletColor: '#39ff88', bulletW: 4, bulletH: 12, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#5cff9c' },   // 631
+  { id: 'm4',         name: 'M4 CARBINE',       damage: 109,  fireRate: 200, bulletSpeed: 13, bulletColor: '#7eff9c', bulletW: 4, bulletH: 12, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#7eff9c' },   // 730
+  { id: 'scar',       name: 'SCAR-H',           damage: 136,  fireRate: 220, bulletSpeed: 13, bulletColor: '#a3ffc6', bulletW: 4, bulletH: 13, count: 1, svg: 'unit-rifle', svgSize: 36, color: '#a3ffc6' },   // 827
+  { id: 'g36',        name: 'G36 ASSAULT',      damage: 60,  fireRate: 230,  bulletSpeed: 13, bulletColor: '#c3ffcd', bulletW: 4, bulletH: 13, count: 2, svg: 'unit-rifle', svgSize: 36, color: '#c3ffcd' },   // 941
   // 11-15: 저격/특수 (1033~1433 DPS)
   { id: 'awp',        name: 'AWP SNIPER',       damage: 413, fireRate: 400, bulletSpeed: 18, bulletColor: '#ffd60a', bulletW: 5, bulletH: 18, count: 1, svg: 'unit-rifle', svgSize: 38, color: '#ffd60a' },  // 1033
   { id: 'barrett',    name: 'BARRETT .50',      damage: 567, fireRate: 500, bulletSpeed: 20, bulletColor: '#fff099', bulletW: 6, bulletH: 22, count: 1, svg: 'unit-rifle', svgSize: 38, color: '#fff099' },  // 1134
-  { id: 'famas',      name: 'FAMAS BURST',      damage: 37,  fireRate: 90,  bulletSpeed: 14, bulletColor: '#ffe45c', bulletW: 4, bulletH: 13, count: 3, svg: 'unit-rifle', svgSize: 38, color: '#ffe45c' },   // 1233
-  { id: 'm249',       name: 'M249 SAW',         damage: 133, fireRate: 100, bulletSpeed: 14, bulletColor: '#ffd60a', bulletW: 5, bulletH: 13, count: 1, svg: 'unit-mg', svgSize: 40, color: '#ffd60a' },      // 1330
-  { id: 'minigun',    name: 'M134 MINIGUN',     damage: 70,  fireRate: 100, bulletSpeed: 15, bulletColor: '#ffae3d', bulletW: 5, bulletH: 12, count: 2, svg: 'unit-mg', svgSize: 40, color: '#ffae3d' },      // 1400
+  { id: 'famas',      name: 'FAMAS BURST',      damage: 55,  fireRate: 240,  bulletSpeed: 14, bulletColor: '#ffe45c', bulletW: 4, bulletH: 13, count: 3, svg: 'unit-rifle', svgSize: 38, color: '#ffe45c' },   // 1233
+  { id: 'm249',       name: 'M249 SAW',         damage: 199, fireRate: 200, bulletSpeed: 14, bulletColor: '#ffd60a', bulletW: 5, bulletH: 13, count: 1, svg: 'unit-mg', svgSize: 40, color: '#ffd60a' },      // 1330
+  { id: 'minigun',    name: 'M134 MINIGUN',     damage: 105,  fireRate: 230, bulletSpeed: 15, bulletColor: '#ffae3d', bulletW: 5, bulletH: 12, count: 2, svg: 'unit-mg', svgSize: 40, color: '#ffae3d' },      // 1400
   // 16-20: 산탄/특수 (1533~1933 DPS)
   { id: 'spas',       name: 'SPAS-12 SHOTGUN',  damage: 108, fireRate: 350, bulletSpeed: 12, bulletColor: '#ff8e3d', bulletW: 4, bulletH: 10, count: 5, svg: 'unit-mg', svgSize: 40, color: '#ff8e3d' },      // 1543
-  { id: 'aa12',       name: 'AA-12 AUTO',       damage: 59,  fireRate: 180, bulletSpeed: 13, bulletColor: '#ff6e1a', bulletW: 5, bulletH: 11, count: 5, svg: 'unit-mg', svgSize: 40, color: '#ff6e1a' },      // 1639
-  { id: 'flamer',     name: 'M2 FLAMETHROWER',  damage: 60,  fireRate: 100, bulletSpeed: 11, bulletColor: '#ff4d1a', bulletW: 7, bulletH: 14, count: 3, svg: 'unit-mg', svgSize: 42, color: '#ff4d1a' },      // 1800
+  { id: 'aa12',       name: 'AA-12 AUTO',       damage: 88,  fireRate: 270, bulletSpeed: 13, bulletColor: '#ff6e1a', bulletW: 5, bulletH: 11, count: 5, svg: 'unit-mg', svgSize: 40, color: '#ff6e1a' },      // 1639
+  { id: 'flamer',     name: 'M2 FLAMETHROWER',  damage: 90,  fireRate: 250, bulletSpeed: 11, bulletColor: '#ff4d1a', bulletW: 7, bulletH: 14, count: 3, svg: 'unit-mg', svgSize: 42, color: '#ff4d1a' },      // 1800
   { id: 'rpg7',       name: 'RPG-7',            damage: 644, fireRate: 350, bulletSpeed: 9,  bulletColor: '#ff2e7e', bulletW: 7, bulletH: 17, count: 1, svg: 'unit-rocket', svgSize: 42, color: '#ff2e7e' },  // 1840
   { id: 'javelin',    name: 'FGM-148 JAVELIN',  damage: 271, fireRate: 280, bulletSpeed: 10, bulletColor: '#ff5da0', bulletW: 8, bulletH: 19, count: 2, svg: 'unit-rocket', svgSize: 42, color: '#ff5da0' },  // 1936
   // 21-25: 미사일 (2033~2433 DPS)
   { id: 'stinger',    name: 'STINGER MISSILE',  damage: 224, fireRate: 220, bulletSpeed: 11, bulletColor: '#ff8ec0', bulletW: 9, bulletH: 21, count: 2, svg: 'unit-rocket', svgSize: 44, color: '#ff8ec0' },  // 2036
   { id: 'tow',        name: 'BGM-71 TOW',       damage: 142, fireRate: 200, bulletSpeed: 11, bulletColor: '#ffaed6', bulletW: 10, bulletH: 22, count: 3, svg: 'unit-rocket', svgSize: 44, color: '#ffaed6' }, // 2130
-  { id: 'hellfire',   name: 'AGM-114 HELLFIRE', damage: 134, fireRate: 180, bulletSpeed: 12, bulletColor: '#ff66b3', bulletW: 11, bulletH: 24, count: 3, svg: 'unit-rocket', svgSize: 46, color: '#ff66b3' }, // 2233
-  { id: 'mlrs',       name: 'M270 MLRS',        damage: 58,  fireRate: 100, bulletSpeed: 11, bulletColor: '#b14aff', bulletW: 9, bulletH: 22, count: 4, svg: 'unit-tank', svgSize: 46, color: '#b14aff' },    // 2320
-  { id: 'himars',     name: 'M142 HIMARS',      damage: 79,  fireRate: 130, bulletSpeed: 12, bulletColor: '#c66dff', bulletW: 10, bulletH: 24, count: 4, svg: 'unit-tank', svgSize: 46, color: '#c66dff' },   // 2431
+  { id: 'hellfire',   name: 'AGM-114 HELLFIRE', damage: 201, fireRate: 270, bulletSpeed: 12, bulletColor: '#ff66b3', bulletW: 11, bulletH: 24, count: 3, svg: 'unit-rocket', svgSize: 46, color: '#ff66b3' }, // 2233
+  { id: 'mlrs',       name: 'M270 MLRS',        damage: 87,  fireRate: 250, bulletSpeed: 11, bulletColor: '#b14aff', bulletW: 9, bulletH: 22, count: 4, svg: 'unit-tank', svgSize: 46, color: '#b14aff' },    // 2320
+  { id: 'himars',     name: 'M142 HIMARS',      damage: 118,  fireRate: 260, bulletSpeed: 12, bulletColor: '#c66dff', bulletW: 10, bulletH: 24, count: 4, svg: 'unit-tank', svgSize: 46, color: '#c66dff' },   // 2431
   // 26-30: 최종 (2533~2933 DPS)
   { id: 'abrams',     name: 'M1A2 ABRAMS',      damage: 169, fireRate: 200, bulletSpeed: 13, bulletColor: '#d49eff', bulletW: 12, bulletH: 26, count: 3, svg: 'unit-tank', svgSize: 48, color: '#d49eff' },   // 2535
-  { id: 'leopard',    name: 'LEOPARD 2A7',      damage: 119, fireRate: 180, bulletSpeed: 14, bulletColor: '#e0baff', bulletW: 13, bulletH: 28, count: 4, svg: 'unit-tank', svgSize: 48, color: '#e0baff' },   // 2644
+  { id: 'leopard',    name: 'LEOPARD 2A7',      damage: 178, fireRate: 270, bulletSpeed: 14, bulletColor: '#e0baff', bulletW: 13, bulletH: 28, count: 4, svg: 'unit-tank', svgSize: 48, color: '#e0baff' },   // 2644
   { id: 'railgun',    name: 'RAILGUN MK-7',     damage: 201, fireRate: 220, bulletSpeed: 22, bulletColor: '#69e6ff', bulletW: 6,  bulletH: 32, count: 3, svg: 'unit-tank', svgSize: 50, color: '#69e6ff' },   // 2741
-  { id: 'plasma',     name: 'PLASMA CANNON',    damage: 85,  fireRate: 150, bulletSpeed: 16, bulletColor: '#39ffd6', bulletW: 14, bulletH: 30, count: 5, svg: 'unit-tank', svgSize: 50, color: '#39ffd6' },   // 2833
+  { id: 'plasma',     name: 'PLASMA CANNON',    damage: 127,  fireRate: 225, bulletSpeed: 16, bulletColor: '#39ffd6', bulletW: 14, bulletH: 30, count: 5, svg: 'unit-tank', svgSize: 50, color: '#39ffd6' },   // 2833
   { id: 'nuke',       name: 'TACTICAL NUKE',    damage: 98,  fireRate: 200, bulletSpeed: 14, bulletColor: '#ffffff', bulletW: 16, bulletH: 34, count: 6, svg: 'unit-tank', svgSize: 52, color: '#ffffff' },   // 2940
 ];
 
@@ -4727,7 +4737,7 @@ const ENEMY_TYPES = {
   hunter:      { baseHp: 40,   speed: 0.13, damage: 4, score: 45,  symbol: 'enemy-hunter',     size: 38, color: '#3a4a18', ranged: true,  shootRate: 1700, shootDamage: 3, bulletSpeed: 13, bulletCount: 1, bulletColor: '#5cff9c' },
   mech:        { baseHp: 400,  speed: 0.06, damage: 10, score: 220, symbol: 'enemy-mech',       size: 46, color: '#5a3a18', ranged: true,  shootRate: 1500, shootDamage: 3, bulletSpeed: 10, bulletCount: 2, bulletColor: '#ff3d3d' },
   // 보스
-  boss:        { baseHp: 8000, speed: 0.04, damage: 20, score: 1500, symbol: 'enemy-boss',       size: 110, color: '#b14aff', ranged: true, shootRate: 2200, shootDamage: 5, bulletSpeed: 3.5, bulletCount: 8, bulletColor: '#ff3d3d' },
+  boss:        { baseHp: 8000, speed: 0.04, damage: 20, score: 1500, symbol: 'enemy-boss',       size: 95, color: '#b14aff', ranged: true, shootRate: 2800, shootDamage: 5, bulletSpeed: 3.5, bulletCount: 5, bulletColor: '#ff3d3d' },
   // 좀비 병사 (메가보스 사망 시 분출 - 현재 비활성화)
   shard:       { baseHp: 35,   speed: 0.05, damage: 2,  score: 30,  symbol: 'enemy-shard',       size: 30, color: '#6a1a6a', ranged: true, shootRate: 1500, shootDamage: 1, bulletSpeed: 7, bulletCount: 1, bulletColor: '#39ff88' },
   // 비행 적
@@ -5251,7 +5261,7 @@ function enemyShoot(enemy) {
 
   // 보스/메가보스는 시간차 발사 (미사일 사이 공간 더 넓게)
   const isBigBoss = enemy.type === 'boss' || enemy.type === 'megaboss';
-  const stagger = isBigBoss ? (enemy.type === 'boss' ? 200 : 160) : 0;
+  const stagger = isBigBoss ? (enemy.type === 'boss' ? 280 : 200) : 0;
 
   for (let i = 0; i < count; i++) {
     let angle = baseAngle;
@@ -6175,12 +6185,11 @@ function getShootersPerVolley() {
   return Math.min(n, Math.max(1, maxShooters));
 }
 
-// 유닛수 × 0.7만큼 데미지 배율 (실제 발사 1명이지만 화력은 부대 전체)
+// 유닛수 × 0.5만큼 데미지 배율 (1명 visual에 화력 집중하되 적당히)
 function getUnitPowerMultiplier() {
   const n = state.units.length;
   if (n <= 1) return 1;
-  // 단순 공식: n × 0.7 (visual 1명에 모든 화력 집중)
-  return Math.max(1, n * 0.7);
+  return Math.max(1, n * 0.5);
 }
 
 function spawnBullets() {
@@ -7313,8 +7322,13 @@ document.addEventListener('keyup', (e) => {
 });
 
 function setupControls() {
+  const isOnButton = (e) => {
+    const t = e.target;
+    return t && (t.closest('.bomb-btn') || t.closest('#sound-toggle') || t.closest('button'));
+  };
   const onStart = (e) => {
     if (!state.running) return;
+    if (isOnButton(e)) return; // 버튼 위 터치는 무시
     dragging = true;
     lastTouchX = getX(e);
     touchStartX = lastTouchX;
@@ -7331,6 +7345,7 @@ function setupControls() {
   const onEnd = () => { dragging = false; };
   const onClick = (e) => {
     if (!state.running) return;
+    if (isOnButton(e)) return; // 버튼 클릭은 무시
     if (Math.abs(getX(e) - touchStartX) < 5) {
       const x = getX(e);
       const roadRect = getRoad();
@@ -7367,7 +7382,8 @@ function getX(e) {
 
 function moveCenterX(dx) {
   const roadRect = getRoad();
-  const margin = 50;
+  // visual 유닛 1명만 도로 안에 있으면 됨 - margin 작게
+  const margin = 10;
   state.centerX = Math.max(roadRect.left + margin, Math.min(roadRect.right - margin, state.centerX + dx));
 }
 
